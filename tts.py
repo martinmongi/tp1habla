@@ -26,3 +26,5 @@ for i in xrange(1,len(texto)):
 
 concat.append("./difonos/" + texto[-1] + "-.wav") # meto el ultimo difono
 
+# ==== Concateno los difonos ======================================================================
+
