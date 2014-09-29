@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import os
 
 # ==== Parseo los argumentos ======================================================================
 args = sys.argv
@@ -19,12 +20,38 @@ if es_pregunta: # si es pregunta, le saco el simbolo
 
 # ==== Para cada par de letras, busco el difono ===================================================
 
-concat = ["./difonos/-" + texto[0] + ".wav"] # meto el primer difono
+concat = ["\"./difonos/-" + texto[0] + ".wav\""] # meto el primer difono
 
 for i in xrange(1,len(texto)):
-	concat.append("./difonos/" + texto[i-1:i+1] + ".wav")
+	concat.append("\"./difonos/" + texto[i-1:i+1] + ".wav\"")
 
-concat.append("./difonos/" + texto[-1] + "-.wav") # meto el ultimo difono
+concat.append("\"./difonos/" + texto[-1] + "-.wav\"") # meto el ultimo difono
 
 # ==== Concateno los difonos ======================================================================
 
+concat_script = open('concat.praat','w')
+concat_script.write("#!/usr/bin/env praat")
+
+for i in xrange(0,len(concat)):
+	concat_script.write("Read from file: " + concat[i] + "\n")
+	concat_script.write("Rename: difono" + str(i) + "\n")
+
+concat_script.write("selectObject: \"Sound difono0\"\n")
+for i in xrange(1,len(concat)):
+	concat_script.write("plusObject: \"Sound difono" + str(i) + "\"\n")
+
+concat_script.write("""Concatenate recoverably
+selectObject: \"Sound chain\"
+Save as WAV file: \"""" + out + """\"
+selectObject: "TextGrid chain"
+Save as text file: \"""" + out + """.TextGrid\"""")
+
+concat_script.close()
+
+print "Script de concatenacion creado"
+os.system('praat concat.praat')
+print "Concatenacion hecha"
+os.system('rm concat.praat')
+print "Script borrado"
+
+# ==== Tengo que manipular la prosodia ============================================================
