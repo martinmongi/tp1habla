@@ -20,21 +20,22 @@ if es_pregunta: # si es pregunta, le saco el simbolo
 
 # ==== Para cada par de letras, busco el difono ===================================================
 
-concat = ["\"./difonos/-" + texto[0] + ".wav\""] # meto el primer difono
+concat = ["-" + texto[0]] # meto el primer difono
 
 for i in xrange(1,len(texto)):
-	concat.append("\"./difonos/" + texto[i-1:i+1] + ".wav\"")
+	concat.append(texto[i-1:i+1])
 
-concat.append("\"./difonos/" + texto[-1] + "-.wav\"") # meto el ultimo difono
-
+concat.append(texto[-1] + "-") # meto el ultimo difono
+print concat
 # ==== Concateno los difonos ======================================================================
 
 concat_script = open('concat.praat','w')
-concat_script.write("#!/usr/bin/env praat")
+concat_script.write("#!/usr/bin/env praat\n")
 
 for i in xrange(0,len(concat)):
-	concat_script.write("Read from file: " + concat[i] + "\n")
-	concat_script.write("Rename: difono" + str(i) + "\n")
+	concat_script.write("Read from file: \"./difonos/difonos-" + concat[i] + ".wav\"\n")
+	concat_script.write("selectObject: \"Sound difonos-" + concat[i] + "\"\n")
+	concat_script.write("Rename: \"difono" + str(i) + "\"\n")
 
 concat_script.write("selectObject: \"Sound difono0\"\n")
 for i in xrange(1,len(concat)):
@@ -51,7 +52,7 @@ concat_script.close()
 print "Script de concatenacion creado"
 os.system('praat concat.praat')
 print "Concatenacion hecha"
-os.system('rm concat.praat')
-print "Script borrado"
+# os.system('rm concat.praat')
+# print "Script borrado"
 
 # ==== Tengo que manipular la prosodia ============================================================
