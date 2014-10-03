@@ -8,9 +8,6 @@ args = sys.argv
 texto = args[1]
 out = args[2]
 
-print 'Texto de entrada:', texto
-print 'Archivo de salida:', out
-
 # ==== Me fijo si es pregunta, me voy a ocupar mas tarde ==========================================
 
 es_pregunta = (texto[-1] == '?')
@@ -49,10 +46,7 @@ Save as text file: \"""" + out + """.TextGrid\"""")
 
 concat_script.close()
 
-print "Script de concatenacion creado"
 os.system('praat concat.praat')
-print "Concatenacion hecha"
-# os.system('rm concat.praat')
-# print "Script borrado"
+os.system('rm concat.praat')
 
 # ==== Tengo que manipular la prosodia ============================================================
