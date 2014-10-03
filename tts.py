@@ -23,7 +23,7 @@ for i in xrange(1,len(texto)):
 	concat.append(texto[i-1:i+1])
 
 concat.append(texto[-1] + "-") # meto el ultimo difono
-print concat
+
 # ==== Concateno los difonos ======================================================================
 
 concat_script = open('concat.praat','w')
