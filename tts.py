@@ -15,6 +15,18 @@ es_pregunta = (texto[-1] == '?')
 if es_pregunta: # si es pregunta, le saco el simbolo
 	texto = texto[:-1]
 
+# ==== Chequeo que sea una cadena valida ==========================================================
+
+for i in range(0,len(texto),2):
+	if not texto[i] in ['k', 'l', 'm', 'p', 's']:
+		print "El caracter " + texto[i] + " no esta en el diccionario."
+		sys.exit(0)
+
+for i in range(1,len(texto),2):
+	if not texto[i] in ['A', 'a']:
+		print "El caracter " + texto[i] + " no esta en el diccionario."
+		sys.exit(0)
+
 # ==== Para cada par de letras, busco el difono ===================================================
 
 concat = ["-" + texto[0]] # meto el primer difono
