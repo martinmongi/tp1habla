@@ -2,9 +2,84 @@
 
 import sys
 import os
+import re
+
+# Configurar path a praat
+praat = './praat'
+
+def getTextGridIntervals(filename):
+    # Leo los contenidos del archivo
+    tgfile = open(filename,'r')
+    contents = tgfile.read()
+    tgfile.close()
+    
+    # Compilo la regexp y matcheo todos los grupos
+    prog = re.compile('^ *x(min|max) = (\d*(.\d*)?)', re.MULTILINE)
+    gss = prog.findall(contents)
+    
+    # Solamente me quedo con los segundos grupos que son los que tienen el numero
+    # Y solamente me quedo con el correspondiente valor al minimo
+    result = []
+    for gs in gss:
+        if gs[0] == 'min':
+            result.append(float(gs[1]))
+    # Agrego el maximo del ultimo grupo para tener el limite final        
+    result.append(float(gss[len(gss)-1][1]))
+    
+    return result[2:len(result)]
+
+def incrementPitch(filename, ofilename, start_val, end_val, inc_pitch):
+    # Leo los contenidos del archivo
+    ptfile = open(filename,'r')
+    contents = ptfile.read()
+    ptfile.close()
+    
+    # Compilo las regexp
+    prog_numb = re.compile('^ *number = (\d*(.\d*)?)', re.MULTILINE)
+    prog_val = re.compile('^ *value = (\d*(.\d*)?)', re.MULTILINE)
+    
+    # Matcheo todos los grupos
+    nss = prog_numb.findall(contents)
+    vss = prog_val.findall(contents)
+    
+    # Busco donde tengo que comenzar a cambiar el pitch
+    pointi = 0
+    while float(nss[pointi][0]) < (start_val-0.025):
+        pointi += 1
+    
+    # Calculo el incremento
+    inc = float(inc_pitch)/float((len(nss)-pointi))
+    
+    # Defino los nuevos valores
+    nvs = []
+    ni = 1
+    for i in range(0, len(vss)):
+        if i < pointi:
+            nvs.append(float(vss[i][0]))
+        else:
+            nvs.append(float(vss[i][0])+inc*ni)
+            ni += 1
+    
+    # Escribo el archivo
+    ofile = open(ofilename,'w')
+    ofile.write('File type = "ooTextFile"\nObject class = "PitchTier"\n\n')
+    ofile.write('xmin = 0\nxmax = ' + str(end_val) + '\n')
+    ofile.write('points: size = ' + str(len(nss)) + '\n')
+    
+    for i in range(0, len(nss)):
+        ofile.write('points [' + str(i+1) + ']:' + '\n')
+        ofile.write('    number = ' + nss[i][0] + '\n')
+        ofile.write('    value = ' + str(nvs[i]) + '\n')
+        
+    ofile.close()
 
 # ==== Parseo los argumentos ======================================================================
 args = sys.argv
+
+if len(args) < 3:
+    print "El uso correcto es ./tss.py secuencia salida.wav"
+    sys.exit(0)
+
 texto = args[1]
 out = args[2]
 
@@ -38,7 +113,7 @@ concat.append(texto[-1] + "-") # meto el ultimo difono
 
 # ==== Concateno los difonos ======================================================================
 
-concat_script = open('concat.praat','w')
+concat_script = open('./concat.praat','w')
 concat_script.write("#!/usr/bin/env praat\n")
 
 for i in xrange(0,len(concat)):
@@ -58,7 +133,37 @@ Save as text file: \"""" + out + """.TextGrid\"""")
 
 concat_script.close()
 
-os.system('praat concat.praat')
+os.system(praat + ' concat.praat')
 os.system('rm concat.praat')
 
 # ==== Tengo que manipular la prosodia ============================================================
+if es_pregunta:
+    
+    # Limites del pitch
+    min_pitch = 50
+    max_pitch = 150
+
+    # Cuanto incrementamos el pitch para simular la pregunta
+    inc_pitch = 300
+
+    # Extraemos el pitch track
+    os.system(praat + ' extraer-pitch-track.praat ' + out + ' pitch-track.praat ' + str(min_pitch) + ' ' + str(max_pitch))
+
+    # Cargamos los intervalos del textgrid
+    intvals = getTextGridIntervals(out + '.TextGrid')
+
+    # Me quedo con el punto del anteultimo difono
+    start_val = intvals[-3]
+    end_val = intvals[-1]
+
+    # Incremento el pitch del archivo desde ese punto
+    incrementPitch('pitch-track.praat', 'mod-pitch-track.praat', start_val, end_val, inc_pitch)
+
+    # Creo el nuevo wav con el pitch modificado
+    os.system(praat + ' reemplazar-pitch-track.praat ' + out + ' mod-pitch-track.praat mod-' + out + ' ' + str(min_pitch) + ' ' + str(max_pitch+inc_pitch))
+
+    # Renombro y elimino basura
+    os.system('rm ' + out)
+    os.system('mv mod-' + out + ' ' + out)
+    os.system('rm pitch-track.praat')
+    os.system('rm mod-pitch-track.praat')
