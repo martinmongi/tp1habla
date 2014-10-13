@@ -126,7 +126,7 @@ if es_pregunta:
             la = i
             
     # Si no hay ninguna o esta muy lejos del final, agrego al final
-    if la == 0 or (len(texto)-la-1) > 4:
+    if la == 0 or (len(texto)-la-1) > 3:
         la = len(texto)-1
         textom = list(texto)
         textom[la] = 'A'
@@ -198,7 +198,7 @@ if es_pregunta:
     # Incremento el pitch del archivo desde ese punto
     # pinc: Cuanto se incrementa en porcentaje con respecto al pitch promedio.
     # Ejemplo: Si el pitch promedio es 100 y pinc esta definido en .5, se incrementara el pitch en 50.
-    pinc = 1.25
+    pinc = 0.50
     inc_pitch = incrementPitch('pitch-track.praat', 'mod-pitch-track.praat', start_val, end_val, pinc)
 
     # Creo el nuevo wav con el pitch modificado
