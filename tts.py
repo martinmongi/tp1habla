@@ -118,6 +118,20 @@ for i in range(1,len(texto),2):
 
 # ==== Para cada par de letras, busco el difono ===================================================
 
+if es_pregunta:
+    # Busco la ultima a acentuada
+    la = 0
+    for i in range(0,len(texto)):
+        if texto[i] == 'A':
+            la = i
+            
+    # Si no hay ninguna, agrego al final
+    if la == 0:
+        la = len(texto)-1
+        textom = list(texto)
+        textom[la] = 'A'
+        texto = ''.join(textom)
+
 concat = ["-" + texto[0]] # meto el primer difono
 
 for i in xrange(1,len(texto)):
@@ -162,19 +176,13 @@ if es_pregunta:
 
     # Cargamos los intervalos del textgrid
     intvals = getTextGridIntervals(out + '.TextGrid')
-    
-    # Busco la ultima a acentuada
-    la = 0
-    for i in range(0,len(texto)):
-        if texto[i] == 'A':
-            la = i
 
     # Marco los indices para incrementar el pitch en ese difono
     # Nota: En el pitch track no le pega bien a los difonos, ademas
     # es necesario incrementar desde antes y un poco despues, por eso
     # el intervalo esta agrandado.
-    si = la-1
-    ei = la+2
+    si = la-2
+    ei = la+3
     
     # Acotamos si estamos fuera de lo admisible
     if si < 0:
