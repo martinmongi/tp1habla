@@ -28,24 +28,36 @@ def getTextGridIntervals(filename):
     
     return result[2:len(result)]
 
-def incrementPitch(filename, ofilename, start_val, end_val, inc_pitch):
+def incrementPitch(filename, ofilename, start_val, end_val, pinc):
     # Leo los contenidos del archivo
     ptfile = open(filename,'r')
     contents = ptfile.read()
     ptfile.close()
     
     # Compilo las regexp
+    prog_max = re.compile('^xmax = (\d*(.\d*)?)', re.MULTILINE)
     prog_numb = re.compile('^ *number = (\d*(.\d*)?)', re.MULTILINE)
     prog_val = re.compile('^ *value = (\d*(.\d*)?)', re.MULTILINE)
     
     # Matcheo todos los grupos
+    xmaxs = prog_max.findall(contents)
     nss = prog_numb.findall(contents)
     vss = prog_val.findall(contents)
+    
+    # Guardo el valor de xmax
+    xmax = xmaxs[0][0]
     
     # Busco donde tengo que comenzar a cambiar el pitch
     pointi = 0
     while float(nss[pointi][0]) < (start_val-0.025):
         pointi += 1
+        
+    # Calculo el avg pitch
+    inc_pitch = 0
+    for i in range(0, len(nss)):
+        inc_pitch += float(vss[i][0])
+    
+    inc_pitch = (inc_pitch/len(vss))*pinc
     
     # Calculo el incremento
     inc = float(inc_pitch)/float((len(nss)-pointi))
@@ -63,7 +75,7 @@ def incrementPitch(filename, ofilename, start_val, end_val, inc_pitch):
     # Escribo el archivo
     ofile = open(ofilename,'w')
     ofile.write('File type = "ooTextFile"\nObject class = "PitchTier"\n\n')
-    ofile.write('xmin = 0\nxmax = ' + str(end_val) + '\n')
+    ofile.write('xmin = 0\nxmax = ' + str(xmax) + '\n')
     ofile.write('points: size = ' + str(len(nss)) + '\n')
     
     for i in range(0, len(nss)):
@@ -72,6 +84,8 @@ def incrementPitch(filename, ofilename, start_val, end_val, inc_pitch):
         ofile.write('    value = ' + str(nvs[i]) + '\n')
         
     ofile.close()
+    
+    return inc_pitch
 
 # ==== Parseo los argumentos ======================================================================
 args = sys.argv
@@ -143,9 +157,6 @@ if es_pregunta:
     min_pitch = 50
     max_pitch = 150
 
-    # Cuanto incrementamos el pitch para simular la pregunta
-    inc_pitch = 50
-
     # Extraemos el pitch track
     os.system(praat + ' extraer-pitch-track.praat ' + out + ' pitch-track.praat ' + str(min_pitch) + ' ' + str(max_pitch))
 
@@ -159,20 +170,28 @@ if es_pregunta:
             la = i
 
     # Marco los indices para incrementar el pitch en ese difono
-    si = la-2
+    # Nota: En el pitch track no le pega bien a los difonos, ademas
+    # es necesario incrementar desde antes y un poco despues, por eso
+    # el intervalo esta agrandado.
+    si = la-1
     ei = la+2
     
+    # Acotamos si estamos fuera de lo admisible
     if si < 0:
         si = 0
     if len(intvals) <= ei:
         ei = len(intvals)-1
     
+    # Definimos el intervalo
     print la, len(intvals), si, ei
     start_val = intvals[si]
     end_val = intvals[ei]
 
     # Incremento el pitch del archivo desde ese punto
-    incrementPitch('pitch-track.praat', 'mod-pitch-track.praat', start_val, end_val, inc_pitch)
+    # pinc: Cuanto se incrementa en porcentaje con respecto al pitch promedio.
+    # Ejemplo: Si el pitch promedio es 100 y pinc esta definido en .5, se incrementara el pitch en 50.
+    pinc = 1.30
+    inc_pitch = incrementPitch('pitch-track.praat', 'mod-pitch-track.praat', start_val, end_val, pinc)
 
     # Creo el nuevo wav con el pitch modificado
     os.system(praat + ' reemplazar-pitch-track.praat ' + out + ' mod-pitch-track.praat mod-' + out + ' ' + str(min_pitch) + ' ' + str(max_pitch+inc_pitch))
