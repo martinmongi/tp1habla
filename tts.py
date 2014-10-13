@@ -162,9 +162,9 @@ Save as text file: \"""" + out + """.TextGrid\"""")
 concat_script.close()
 
 os.system(praat + ' concat.praat')
-#os.system('rm concat.praat')
+os.system('rm concat.praat')
 
-# ==== Tengo que manipular la prosodia ============================================================
+# ==== Tengo que itnervalomanipular la prosodia ============================================================
 if es_pregunta:
     
     # Limites del pitch
