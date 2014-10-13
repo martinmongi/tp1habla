@@ -134,7 +134,7 @@ Save as text file: \"""" + out + """.TextGrid\"""")
 concat_script.close()
 
 os.system(praat + ' concat.praat')
-os.system('rm concat.praat')
+#os.system('rm concat.praat')
 
 # ==== Tengo que manipular la prosodia ============================================================
 if es_pregunta:
@@ -144,17 +144,32 @@ if es_pregunta:
     max_pitch = 150
 
     # Cuanto incrementamos el pitch para simular la pregunta
-    inc_pitch = 300
+    inc_pitch = 50
 
     # Extraemos el pitch track
     os.system(praat + ' extraer-pitch-track.praat ' + out + ' pitch-track.praat ' + str(min_pitch) + ' ' + str(max_pitch))
 
     # Cargamos los intervalos del textgrid
     intvals = getTextGridIntervals(out + '.TextGrid')
+    
+    # Busco la ultima a acentuada
+    la = 0
+    for i in range(0,len(texto)):
+        if texto[i] == 'A':
+            la = i
 
-    # Me quedo con el punto del anteultimo difono
-    start_val = intvals[-3]
-    end_val = intvals[-1]
+    # Marco los indices para incrementar el pitch en ese difono
+    si = la-2
+    ei = la+2
+    
+    if si < 0:
+        si = 0
+    if len(intvals) <= ei:
+        ei = len(intvals)-1
+    
+    print la, len(intvals), si, ei
+    start_val = intvals[si]
+    end_val = intvals[ei]
 
     # Incremento el pitch del archivo desde ese punto
     incrementPitch('pitch-track.praat', 'mod-pitch-track.praat', start_val, end_val, inc_pitch)
